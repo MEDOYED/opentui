@@ -203,6 +203,22 @@ describe("BoxRenderable - border titles (top and bottom)", () => {
     const lines = captureFrame().split("\n")
     expect(lines[4].slice(0, 18)).toBe(expectedBorder)
   })
+
+  test("sets titleColor and triggers render on change", () => {
+    const box = new BoxRenderable(testRenderer, {
+      id: "title-color-test",
+      titleColor: "#ff0000",
+    })
+
+    expect(box.titleColor?.toInts()).toEqual([255, 0, 0, 255])
+
+    const renderSpy = spyOn(box as any, "requestRender")
+
+    box.titleColor = "#00ff00"
+
+    expect(box.titleColor?.toInts()).toEqual([0, 255, 0, 255])
+    expect(renderSpy).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe("BoxRenderable - transparent border blending", () => {
