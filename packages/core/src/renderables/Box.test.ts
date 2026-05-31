@@ -412,4 +412,35 @@ describe("BoxRenderable - no-op rendering", () => {
     ;(box as any).renderSelf(buffer)
     expect(called).toBe(true)
   })
+
+  test("renders title with titleColor even if border is transparent", async () => {
+    const box = new BoxRenderable(testRenderer, {
+      id: "title-color-transparent-border",
+      border: true,
+      width: 10,
+      height: 5,
+      title: "Test",
+      titleColor: "#ff0000",
+      borderColor: "transparent",
+      backgroundColor: "transparent",
+    })
+
+    testRenderer.root.add(box)
+    await renderOnce()
+
+    const buffer = testRenderer.currentRenderBuffer
+
+    const fgs = buffer.buffers.fg
+    let foundRed = false
+
+    for (let i = 0; i < 10; i++) {
+      const ints = RGBA.fromArray(fgs.slice(i, i + 1)).toInts()
+      if (ints[0] === 255 && ints[1] === 0 && ints[2] === 0) {
+        foundRed = true
+        break
+      }
+    }
+
+    expect(foundRed).toBe(true)
+  })
 })

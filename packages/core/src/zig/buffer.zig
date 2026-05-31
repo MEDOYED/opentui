@@ -1878,7 +1878,12 @@ pub const OptimizedBuffer = struct {
         bottomTitleAlignment: u8, // 0=left, 1=center, 2=right
     ) !void {
         const opacity = self.getCurrentOpacity();
-        if (isFullyTransparent(opacity, borderColor, backgroundColor)) return;
+
+        const border_bg_transparent = isFullyTransparent(opacity, borderColor, backgroundColor);
+        const has_title = title != null or bottomTitle != null;
+        const title_visible = has_title and !isFullyTransparent(opacity, titleColor, backgroundColor);
+
+        if (border_bg_transparent and !title_visible) return;
 
         const startX = @max(0, x);
         const startY = @max(0, y);

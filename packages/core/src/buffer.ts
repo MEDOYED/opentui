@@ -447,7 +447,7 @@ export class OptimizedBuffer {
     backgroundColor: RGBA
     shouldFill?: boolean
     title?: string
-    titleColor: RGBA
+    titleColor?: RGBA
     titleAlignment?: "left" | "center" | "right"
     bottomTitle?: string
     bottomTitleAlignment?: "left" | "center" | "right"
@@ -473,7 +473,7 @@ export class OptimizedBuffer {
       packedOptions,
       options.borderColor,
       options.backgroundColor,
-      options.titleColor,
+      options.titleColor ?? options.borderColor,
       options.title ?? null,
       options.bottomTitle ?? null,
     )
