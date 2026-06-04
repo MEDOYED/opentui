@@ -19,6 +19,19 @@ afterEach(() => {
   warnSpy.mockRestore()
 })
 
+function getCellIndex(x: number, y: number): number {
+  return y * testRenderer.currentRenderBuffer.width + x
+}
+
+function getCellChar(x: number, y: number): string {
+  return String.fromCodePoint(testRenderer.currentRenderBuffer.buffers.char[getCellIndex(x, y)])
+}
+
+function getCellForeground(x: number, y: number): [number, number, number, number] {
+  const index = getCellIndex(x, y) * 4
+  return RGBA.fromArray(testRenderer.currentRenderBuffer.buffers.fg.slice(index, index + 4)).toInts()
+}
+
 describe("BoxRenderable - focusable option", () => {
   test("is not focusable by default", async () => {
     const box = new BoxRenderable(testRenderer, {
@@ -413,13 +426,15 @@ describe("BoxRenderable - no-op rendering", () => {
     expect(called).toBe(true)
   })
 
-  test("renders title with titleColor even if border is transparent", async () => {
+  test("renders titles with titleColor even if border is transparent", async () => {
     const box = new BoxRenderable(testRenderer, {
       id: "title-color-transparent-border",
       border: true,
       width: 10,
       height: 5,
       title: "Test",
+      bottomTitle: "Bot",
+      bottomTitleAlignment: "right",
       titleColor: "#ff0000",
       borderColor: "transparent",
       backgroundColor: "transparent",
@@ -428,19 +443,32 @@ describe("BoxRenderable - no-op rendering", () => {
     testRenderer.root.add(box)
     await renderOnce()
 
-    const buffer = testRenderer.currentRenderBuffer
+    const lines = captureFrame().split("\n")
+    expect(lines[0].slice(0, 10)).toBe("  Test    ")
+    expect(lines[4].slice(0, 10)).toBe("     Bot  ")
+    expect(getCellChar(0, 0)).toBe(" ")
+    expect(getCellChar(2, 0)).toBe("T")
+    expect(getCellForeground(2, 0)).toEqual([255, 0, 0, 255])
+    expect(getCellChar(5, 4)).toBe("B")
+    expect(getCellForeground(5, 4)).toEqual([255, 0, 0, 255])
+  })
 
-    const fgs = buffer.buffers.fg
-    let foundRed = false
+  test("falls back to borderColor when titleColor is unset", async () => {
+    const box = new BoxRenderable(testRenderer, {
+      id: "title-color-border-fallback",
+      border: true,
+      width: 10,
+      height: 3,
+      title: "Test",
+      borderColor: "#0000ff",
+      backgroundColor: "transparent",
+    })
 
-    for (let i = 0; i < 10; i++) {
-      const ints = RGBA.fromArray(fgs.slice(i, i + 1)).toInts()
-      if (ints[0] === 255 && ints[1] === 0 && ints[2] === 0) {
-        foundRed = true
-        break
-      }
-    }
+    testRenderer.root.add(box)
+    await renderOnce()
 
-    expect(foundRed).toBe(true)
+    expect(captureFrame().split("\n")[0].slice(0, 10)).toBe("┌─Test───┐")
+    expect(getCellForeground(0, 0)).toEqual([0, 0, 255, 255])
+    expect(getCellForeground(2, 0)).toEqual([0, 0, 255, 255])
   })
 })
